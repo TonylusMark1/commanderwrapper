@@ -1,0 +1,23 @@
+{
+  "name": "commanderwrapper",
+  "version": "0.0.1",
+  "description": "Simple commander wrapper",
+  "type": "module",
+  "main": "dist/index.js",
+  "author": "tonylus",
+  "license": "ISC",
+  "repository": "https://github.com/TonylusMark1/commanderwrapper",
+  "dependencies": {
+    "colorette": "^2.0.20",
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
+  },
+  "scripts": {
+    "build": "tsup",
+    "prepare": "npm run build"
+  }
+}
