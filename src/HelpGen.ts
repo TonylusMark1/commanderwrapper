@@ -27,21 +27,31 @@ export default class HelpGen {
     generateGlobalHelpText(): string {
         const lines: string[] = [];
 
-        lines.push(colorette.bold(`\nAvailable Commands:\n`));
+        //
+
+        lines.push(
+            colorette.bold(`Available Commands`) +
+            colorette.italic(` (for detailed options, use ${colorette.cyan('<command> --help')}):`) +
+            `\n`
+        );
+
+        //
 
         for (const [commandName, commandMeta] of this.parent.commands.entries()) {
             const description = commandMeta.commander.description() || '';
 
-            lines.push(`  ${colorette.cyan(commandName)}` + (commandMeta.arguments.length ? " " + Utils.FormatCommandArgumentsInLine(commandMeta) : ""));
+            lines.push(`  ${colorette.cyan(commandName)}`);
 
             if (description.trim() !== '') {
-                lines.push(`    ${description}`);
+                lines.push(`    ${colorette.italic(description)}`);
             }
 
             lines.push('');
         }
 
-        lines.push(`${colorette.green('Tip')}: For detailed options, use ${colorette.cyan('<command> --help')}\n`);
+        lines.push('');
+
+        //
 
         return lines.join('\n');
     }
@@ -63,31 +73,36 @@ export default class HelpGen {
 
     generateCommandFullIntroduction(commandName: string) {
         const commandMeta = this.parent.getCommand(commandName);
-        
+
         //
 
         const lines: string[] = [];
 
         //
 
-        lines.push(colorette.bold(`Command: ${commandName}`) + " " + Utils.FormatCommandArgumentsInLine(commandMeta));
+        lines.push(colorette.bold(`Command:`) + ` ${commandName}` + " " + Utils.FormatCommandArgumentsInLine(commandMeta));
         lines.push("");
         lines.push(colorette.italic(`  ${commandMeta.commander.description()}`));
-        lines.push("");
+        
+        //
 
-        const args: {left: string, right?: string}[] = commandMeta.arguments.map(arg => {
-            return {
-                left: Utils.FormatCommandArgument(arg),
-                right: arg.config.validation ? `Allowed: ${Utils.FormatValidationRules(arg.config.validation)}` : undefined
-            }
-        });
+        if (commandMeta.arguments.length) {
+            lines.push("");
 
-        const longestLeftLength = args.reduce((max, arg) => Math.max(max, arg.left.length), 0);
-        args.forEach(arg => {
-            arg.left = arg.left.padEnd(longestLeftLength + 3);
+            const args: { left: string, right?: string }[] = commandMeta.arguments.map(arg => {
+                return {
+                    left: Utils.FormatCommandArgument(arg),
+                    right: arg.config.validation ? `Allowed: ${Utils.FormatValidationRules(arg.config.validation)}` : undefined
+                }
+            });
 
-            lines.push(`  ` + colorette.cyan(arg.left) + (arg.right ? arg.right : ""));
-        });
+            const longestLeftLength = args.reduce((max, arg) => Math.max(max, arg.left.length), 0);
+            args.forEach(arg => {
+                arg.left = arg.left.padEnd(longestLeftLength + 3);
+
+                lines.push(`  ` + colorette.cyan(arg.left) + (arg.right ? arg.right : ""));
+            });
+        }
 
         //
 
@@ -96,7 +111,7 @@ export default class HelpGen {
 
     generateCommandOptionsFullIntroduction(commandName: string) {
         const commandMeta = this.parent.getCommand(commandName);
-        
+
         //
 
         const lines: string[] = [];
@@ -105,12 +120,9 @@ export default class HelpGen {
 
         lines.push(colorette.bold(`\nOptions:\n`));
 
-        const groups = Object.entries(commandMeta.groups);
+        //
 
-        if (groups.length === 0) {
-            lines.push(colorette.yellow('No options available for this command.\n'));
-            return lines.join('\n');
-        }
+        const groups = Object.entries(commandMeta.groups);
 
         groups.unshift(["built-in", [{
             groupName: "built-in",
@@ -120,15 +132,17 @@ export default class HelpGen {
             commanderOption: null as any
         }]]);
 
+        //
+
         const allOptions = groups.flatMap(([, options]) => options);
         const flagPadding = Math.max(...allOptions.map(opt => opt.flags.length)) + 2;
 
         for (const [groupName, options] of groups) {
-            lines.push(colorette.underline(`${groupName}:`) + "\n");
+            lines.push("  " + colorette.underline(`${groupName}:`) + "\n");
 
             for (const option of options) {
                 const flags = colorette.cyan(option.flags.padEnd(flagPadding));
-                lines.push(`  ${flags} ${option.description}`);
+                lines.push(`    ${flags} ${option.description}`);
             }
 
             lines.push('');
