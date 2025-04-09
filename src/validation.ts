@@ -1,6 +1,6 @@
-import * as Types from "commanderwrapper/src/types.js";
+import * as Types from "./types.js";
 
-import CommanderWrapper from 'commanderwrapper/src/index.js';
+import CommanderWrapper from './index.js';
 
 //
 

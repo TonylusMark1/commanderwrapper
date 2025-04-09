@@ -9,7 +9,9 @@ import Validation from "./Validation.js";
 
 //
 
-type ValidationRule<T> = Types.ValidationRule<T>
+export type {ValidationRule, OptionConfig, CommandPositionalArgument as CommandArgument, RegisterOption as RegisterOptionMeta, ScopedRegisterOptionCallback} from "./types.js";
+
+/*type ValidationRule<T> = Types.ValidationRule<T>
 type OptionConfig<T> = Types.OptionConfig<T>
 type CommandArgument = Types.CommandArgument
 type RegisterOptionMeta = Types.RegisterOptionMeta
@@ -21,7 +23,7 @@ export {
     CommandArgument,
     RegisterOptionMeta,
     ScopedRegisterOptionCallback
-};
+};*/
 
 //
 
@@ -35,7 +37,7 @@ export default class CommanderWrapper {
 
     private cmderPrg = new Command();
 
-    private commands: Map<string, Types.CommandMeta> = new Map();
+    private commands: Map<string, Types.RegisteredCommand> = new Map();
 
     private usedCommand: string = null as any;
 
@@ -49,7 +51,7 @@ export default class CommanderWrapper {
     registerCommand(
         commandName: string,
         description: string,
-        opts?: Types.RegisterCommandOptions,
+        opts?: Types.RegisterCommand,
         setup?: (registerOption: Types.ScopedRegisterOptionCallback) => void
     ) {
         const command = this.obtainCommand(commandName, opts?.isDefault ?? false, opts?.arguments);
@@ -65,7 +67,7 @@ export default class CommanderWrapper {
         command.commander.allowUnknownOption(!(opts?.strictMode ?? true));
 
         if (setup) {
-            const scopedRegisterOption: Types.ScopedRegisterOptionCallback = <T>(meta: Types.RegisterOptionMeta, config: Types.OptionConfig<T>) => {
+            const scopedRegisterOption: Types.ScopedRegisterOptionCallback = <T>(meta: Types.RegisterOption, config: Types.OptionConfig<T>) => {
                 this.registerOption(commandName, meta, config);
             };
 
@@ -73,8 +75,8 @@ export default class CommanderWrapper {
         }
     }
 
-    private processCommandArguments(command: Types.CommandMeta, args: any[]): void {
-        const parsedArgs: { config: Types.CommandArgument; value: any }[] = [];
+    private processCommandArguments(command: Types.RegisteredCommand, args: any[]): void {
+        const parsedArgs: { config: Types.CommandPositionalArgument; value: any }[] = [];
 
         for (let i = 0; i < command.arguments.length; i++) {
             const argConfig = command.arguments[i].config;
@@ -103,7 +105,7 @@ export default class CommanderWrapper {
 
     //
 
-    registerOption<T>(commandName: string, meta: Types.RegisterOptionMeta, config: Types.OptionConfig<T>) {
+    registerOption<T>(commandName: string, meta: Types.RegisterOption, config: Types.OptionConfig<T>) {
         const command = this.getCommand(commandName);
 
         //
@@ -115,8 +117,9 @@ export default class CommanderWrapper {
 
         const commanderOption = new Option(config.flags, config.description);
 
-        if (config.defaultValue !== undefined)
+        if (config.defaultValue !== undefined) {
             commanderOption.default(config.defaultValue);
+        }
 
         //
 
@@ -145,7 +148,7 @@ export default class CommanderWrapper {
 
         //
 
-        const parserCallback = this.createOptionArgParser(option, config, command);
+        const parserCallback = this.createOptionArgParser(command, option);
         commanderOption.argParser(parserCallback);
 
         //
@@ -155,7 +158,7 @@ export default class CommanderWrapper {
                 command.commander.option(`--no-${longFlag}`, "", () => {
                     command.userProvidedOptions.add(option.commanderOption.attributeName());
                     return false;
-                });
+                }, false);
             });
         }
 
@@ -180,7 +183,7 @@ export default class CommanderWrapper {
         command.commander.addOption(commanderOption);
     }
 
-    private createOptionArgParser<T>(option: Types.RegisteredOption<T>, config: Types.OptionConfig<T>, command: Types.CommandMeta): (value: any) => any {
+    private createOptionArgParser<T>(command: Types.RegisteredCommand, option: Types.RegisteredOption<T>): (value: any) => any {
         if (option.commanderOption.isBoolean()) {
             return (value: any) => {
                 command.userProvidedOptions.add(option.commanderOption.attributeName());
@@ -190,7 +193,7 @@ export default class CommanderWrapper {
             return (value: any) => {
                 command.userProvidedOptions.add(option.commanderOption.attributeName());
 
-                const parsedValue = config.valueParser ? config.valueParser(value) : value;
+                const parsedValue = option.valueParser ? option.valueParser(value) : value;
 
                 this.validateOptionValue(parsedValue, option, false);
 
@@ -304,8 +307,8 @@ export default class CommanderWrapper {
         return command;
     }
 
-    private obtainCommand(commandName: string, isDefault: boolean = false, commandArgs: Types.CommandArgument[] = []) {
-        let meta: Types.CommandMeta | undefined = this.commands.get(commandName)
+    private obtainCommand(commandName: string, isDefault: boolean = false, commandArgs: Types.CommandPositionalArgument[] = []) {
+        let meta: Types.RegisteredCommand | undefined = this.commands.get(commandName)
 
         if (meta)
             return meta;

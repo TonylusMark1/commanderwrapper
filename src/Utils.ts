@@ -19,7 +19,7 @@ export function FormatValidationRules<T>(validation: Types.ValidationRule<T>[]) 
 
 //
 
-export function FormatCommandArgumentsInLine(commandMeta: Types.CommandMeta) {
+export function FormatCommandArgumentsInLine(commandMeta: Types.RegisteredCommand) {
     return commandMeta.arguments
         .map(arg => FormatCommandArgument(arg))
         .join(" ");

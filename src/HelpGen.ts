@@ -2,7 +2,7 @@ import * as colorette from 'colorette';
 
 import * as Utils from "./Utils.js";
 
-import CommanderWrapper from 'commanderwrapper/src/index.js';
+import CommanderWrapper from './index.js';
 
 //
 

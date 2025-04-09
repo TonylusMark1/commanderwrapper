@@ -14,28 +14,29 @@ export interface OptionConfig<T> {
     description: string;
     defaultValue?: T;
     validation?: ValidationRule<T>[];
+
     onValidate?: (value: T) => void;
     valueParser?: (value: string) => any;
 }
 
-export interface RegisterOptionMeta {
+export interface RegisterOption {
     groupName?: string;
     tags?: string[];
 }
 
-export interface RegisteredOption<T> extends OptionConfig<T>, Required<RegisterOptionMeta> {
+export interface RegisteredOption<T> extends OptionConfig<T>, Required<RegisterOption> {
     commanderOption: Option;
 }
 
 //
 
-export interface RegisterCommandOptions {
+export interface RegisterCommand {
     strictMode?: boolean;
     isDefault?: boolean;
-    arguments?: CommandArgument[];
+    arguments?: CommandPositionalArgument[];
 }
 
-export interface CommandArgument {
+export interface CommandPositionalArgument {
     name: string;
     required?: boolean;
     parser?: (value: string) => any;
@@ -46,7 +47,7 @@ export interface CommandGroup {
     [groupName: string]: RegisteredOption<any>[];
 }
 
-export interface CommandMeta {
+export interface RegisteredCommand {
     commander: Command;
     groups: CommandGroup;
     userProvidedOptions: Set<string>;
@@ -54,10 +55,10 @@ export interface CommandMeta {
 }
 
 export interface CommandMetaArgument {
-    config: CommandArgument;
+    config: CommandPositionalArgument;
     value: any;
 }
 
 //
 
-export type ScopedRegisterOptionCallback = <T>(meta: RegisterOptionMeta, config: OptionConfig<T>) => void;
+export type ScopedRegisterOptionCallback = <T>(regOpt: RegisterOption, config: OptionConfig<T>) => void;
