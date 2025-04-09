@@ -1,6 +1,6 @@
 {
   "name": "commanderwrapper",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Simple commander wrapper",
   "type": "module",
   "main": "dist/index.js",
