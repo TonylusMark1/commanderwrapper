@@ -50,7 +50,12 @@ export interface CommandMeta {
     commander: Command;
     groups: CommandGroup;
     userProvidedOptions: Set<string>;
-    arguments: { config: CommandArgument; value: any }[];
+    arguments: CommandMetaArgument[];
+}
+
+export interface CommandMetaArgument {
+    config: CommandArgument;
+    value: any;
 }
 
 //

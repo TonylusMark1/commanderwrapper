@@ -2,8 +2,10 @@ import { Command, Option } from 'commander';
 import * as colorette from 'colorette';
 
 import * as Types from "./types.js";
-import * as Validation from "./validation.js";
-import * as Help from "./help.js";
+
+import * as Utils from "./Utils.js";
+import HelpGen from "./HelpGen.js";
+import Validation from "./Validation.js";
 
 //
 
@@ -28,7 +30,10 @@ export default class CommanderWrapper {
 
     //
 
-    private mainProgram = new Command();
+    private helpGen = new HelpGen(this as any);
+    private validation = new Validation(this as any);
+
+    private cmderPrg = new Command();
 
     private commands: Map<string, Types.CommandMeta> = new Map();
 
@@ -81,8 +86,8 @@ export default class CommanderWrapper {
             if (rawValue !== undefined) {
                 const parsedValue = argConfig.parser ? argConfig.parser(rawValue) : rawValue;
 
-                if (argConfig.validation && !Validation.IsValueValid(parsedValue, argConfig.validation)) {
-                    const allowed = this.formatAllowedValues(argConfig.validation);
+                if (argConfig.validation && !this.validation.isValueValid(parsedValue, argConfig.validation)) {
+                    const allowed = Utils.FormatValidationRules(argConfig.validation);
                     throw new Error(colorette.red(`Invalid value for argument "${colorette.yellow(argConfig.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
                 }
 
@@ -121,7 +126,7 @@ export default class CommanderWrapper {
 
             //
 
-            const invalidRule = Validation.FindFirstInvalidRule(config.validation);
+            const invalidRule = this.validation.findFirstInvalidRule(config.validation);
 
             if (invalidRule)
                 throw new Error(`Invalid validation rule for option "${config.flags}" ${JSON.stringify(invalidRule)}.`);
@@ -200,8 +205,8 @@ export default class CommanderWrapper {
     //
 
     parse(argv?: string[]) {
-        this.mainProgram.helpInformation = () => Help.generateGlobalHelpText(this.commands);
-        this.mainProgram.parse(argv || process.argv);
+        this.cmderPrg.helpInformation = () => this.helpGen.generateGlobalHelpText();
+        this.cmderPrg.parse(argv || process.argv);
     }
 
     //
@@ -280,7 +285,7 @@ export default class CommanderWrapper {
         for (const groupOptions of Object.values(command.groups)) {
             for (const option of groupOptions) {
                 if (option.commanderOption.attributeName() === optionName)
-                    return Validation.IsValueValid(value, option.validation);
+                    return this.validation.isValueValid(value, option.validation);
             }
         }
 
@@ -316,7 +321,7 @@ export default class CommanderWrapper {
         const cmd_nameAndArgs = argString ? `${commandName} ${argString}` : commandName;
         const cmd_opts = { isDefault };
 
-        const commander = this.mainProgram.command(cmd_nameAndArgs, cmd_opts);
+        const commander = this.cmderPrg.command(cmd_nameAndArgs, cmd_opts);
 
         meta = {
             commander,
@@ -327,7 +332,7 @@ export default class CommanderWrapper {
 
         //
 
-        commander.helpInformation = () => Help.generateHelpTextForCommand(commandName, this.getCommand(commandName));
+        commander.helpInformation = () => this.helpGen.generateHelpTextForCommand(commandName);
 
         //
 
@@ -346,11 +351,11 @@ export default class CommanderWrapper {
     }
 
     private validateOptionValue<T>(value: T, option: Types.RegisteredOption<T>, isDefault: boolean) {
-        const isValid = Validation.IsValueValid(value, option.validation);
+        const isValid = this.validation.isValueValid(value, option.validation);
 
         if (!isValid) {
             const source = isDefault ? 'Default value' : 'Invalid value';
-            const allowed = this.formatAllowedValues(option.validation!);
+            const allowed = Utils.FormatValidationRules(option.validation!);
 
             throw new Error(colorette.red(`${source} for option "${colorette.yellow(option.commanderOption.attributeName())}" is not allowed.\n${colorette.green('Allowed')}: ${allowed}`));
         }
@@ -380,29 +385,12 @@ export default class CommanderWrapper {
         }
 
         if (option.validation && option.validation.length > 0) {
-            const allowed = this.formatAllowedValues(option.validation);
+            const allowed = Utils.FormatValidationRules(option.validation);
             parts.push(`(${colorette.green('Allowed')}: ${colorette.yellow(allowed)})`);
         }
 
         //
 
         option.description = parts.filter(Boolean).join(' ');
-    }
-
-    //
-
-    private formatAllowedValues<T>(validation: Types.ValidationRule<T>[]) {
-        return validation
-            .map(rule => {
-                if (rule instanceof RegExp)
-                    return rule.toString();
-
-                if (typeof rule === 'object' && rule !== null && 'pattern' in rule)
-                    return `<${rule.description}>`;
-
-                return JSON.stringify(rule);
-            })
-            .filter(Boolean)
-            .join(', ');
     }
 }
