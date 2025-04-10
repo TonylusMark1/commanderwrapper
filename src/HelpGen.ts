@@ -94,11 +94,11 @@ export default class HelpGen {
                     left: Utils.FormatCommandArgument(arg),
                     right: [
                         `(${arg.config.required ? "Required": "Not required"})`,
-                        `(${arg.config.validation ? `(Allowed values: ${Utils.FormatValidationRules(arg.config.validation)}` : undefined}))`,
+                        `(${arg.config.validation ? `Allowed values: ${colorette.yellow(Utils.FormatValidationRules(arg.config.validation))}` : undefined})`,
                         (
                             arg.config.default
                                 ?
-                                `(Default value: ${arg.config.default})`
+                                `(Default value: ${colorette.yellow(JSON.stringify(arg.config.default))})`
                                 :
                                 ""
                         ),
