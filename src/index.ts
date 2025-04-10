@@ -1,7 +1,7 @@
 import { Command, Option } from 'commander';
 import * as colorette from 'colorette';
 
-import * as Types from "./types.js";
+import type * as Types from "./types.js";
 
 import * as Utils from "./Utils.js";
 import HelpGen from "./HelpGen.js";
@@ -9,21 +9,7 @@ import Validation from "./Validation.js";
 
 //
 
-export type {ValidationRule, OptionConfig, CommandPositionalArgument as CommandArgument, RegisterOption as RegisterOptionMeta, ScopedRegisterOptionCallback} from "./types.js";
-
-/*type ValidationRule<T> = Types.ValidationRule<T>
-type OptionConfig<T> = Types.OptionConfig<T>
-type CommandArgument = Types.CommandArgument
-type RegisterOptionMeta = Types.RegisterOptionMeta
-type ScopedRegisterOptionCallback = Types.ScopedRegisterOptionCallback
-
-export {
-    ValidationRule,
-    OptionConfig,
-    CommandArgument,
-    RegisterOptionMeta,
-    ScopedRegisterOptionCallback
-};*/
+export type { ValidationRule, OptionConfig, CommandPositionalArgument as CommandArgument, RegisterOption as RegisterOptionMeta, ScopedRegisterOptionCallback } from "./types.js";
 
 //
 
@@ -54,6 +40,17 @@ export default class CommanderWrapper {
         opts?: Types.RegisterCommand,
         setup?: (registerOption: Types.ScopedRegisterOptionCallback) => void
     ) {
+        if (opts?.arguments) {
+            for (const arg of opts?.arguments) {
+                if (arg.validation && !this.validation.isValueValid(arg.default, arg.validation)) {
+                    const allowed = Utils.FormatValidationRules(arg.validation);
+                    throw new Error(colorette.red(`Invalid default value for argument "${colorette.yellow(arg.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
+                }
+            }
+        }
+
+        //
+
         const command = this.obtainCommand(commandName, opts?.isDefault ?? false, opts?.arguments);
 
         command.commander
@@ -80,10 +77,12 @@ export default class CommanderWrapper {
 
         for (let i = 0; i < command.arguments.length; i++) {
             const argConfig = command.arguments[i].config;
-            const rawValue = args[i];
+            let rawValue = args[i];
 
             if (argConfig.required && rawValue === undefined)
                 throw new Error(colorette.red(`Missing required argument: ${colorette.yellow(argConfig.name)}`));
+
+            rawValue = rawValue ?? command.arguments[i].config.default;
 
             if (rawValue !== undefined) {
                 const parsedValue = argConfig.parser ? argConfig.parser(rawValue) : rawValue;
@@ -292,7 +291,7 @@ export default class CommanderWrapper {
             }
         }
 
-        if ( !ignoreAbsence )
+        if (!ignoreAbsence)
             throw new Error(`Option "${optionName}" not found in command "${this.usedCommand}".`);
     }
 

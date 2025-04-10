@@ -36,10 +36,11 @@ export interface RegisterCommand {
     arguments?: CommandPositionalArgument[];
 }
 
-export interface CommandPositionalArgument {
+export interface CommandPositionalArgument<T extends any = any> {
     name: string;
     required?: boolean;
-    parser?: (value: string) => any;
+    default?: T;
+    parser?: (value: string) => T;
     validation?: ValidationRule<any>[];
 }
 
@@ -54,9 +55,9 @@ export interface RegisteredCommand {
     arguments: CommandMetaArgument[];
 }
 
-export interface CommandMetaArgument {
-    config: CommandPositionalArgument;
-    value: any;
+export interface CommandMetaArgument<T extends any = any> {
+    config: CommandPositionalArgument<T>;
+    value: T;
 }
 
 //

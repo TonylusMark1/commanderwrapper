@@ -10,7 +10,13 @@ cli.registerCommand(
 	{
 		strictMode: true,
 		arguments: [
-			{ name: 'name', required: true, parser: String, validation: [/^[a-zA-Z0-9]+$/] }
+			{
+				name: 'name',
+				required: false,
+				default: "Someone",
+				parser: String,
+				validation: [/^[a-zA-Z0-9]+$/]
+			}
 		]
 	},
 	(registerOption) => {
