@@ -92,7 +92,17 @@ export default class HelpGen {
             const args: { left: string, right?: string }[] = commandMeta.arguments.map(arg => {
                 return {
                     left: Utils.FormatCommandArgument(arg),
-                    right: arg.config.validation ? `Allowed: ${Utils.FormatValidationRules(arg.config.validation)}` : undefined
+                    right: [
+                        `(${arg.config.required ? "Required": "Not required"})`,
+                        `(${arg.config.validation ? `(Allowed values: ${Utils.FormatValidationRules(arg.config.validation)}` : undefined}))`,
+                        (
+                            arg.config.default
+                                ?
+                                `(Default value: ${arg.config.default})`
+                                :
+                                ""
+                        ),
+                    ].join(" ")
                 }
             });
 
