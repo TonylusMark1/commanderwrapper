@@ -42,9 +42,9 @@ export default class CommanderWrapper {
     ) {
         if (opts?.arguments) {
             for (const arg of opts?.arguments) {
-                if (arg.validation && !this.validation.isValueValid(arg.default, arg.validation)) {
+                if (arg.default && arg.validation && !this.validation.isValueValid(arg.default, arg.validation)) {
                     const allowed = Utils.FormatValidationRules(arg.validation);
-                    throw new Error(colorette.red(`Invalid default value for argument "${colorette.yellow(arg.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
+                    throw new Error(colorette.red(`Invalid default value ${arg.default} for argument "${colorette.yellow(arg.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
                 }
             }
         }
