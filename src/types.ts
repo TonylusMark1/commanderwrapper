@@ -5,7 +5,8 @@ import { Command, Option } from 'commander';
 export type ValidationRule<T> =
     | (T extends any[] ? never : T)
     | RegExp
-    | { pattern: RegExp; description: string };
+    | { pattern: RegExp; description: string }
+    | { callback: (value: T) => boolean; description: string };
 
 //
 

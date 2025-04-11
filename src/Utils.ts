@@ -8,7 +8,7 @@ export function FormatValidationRules<T>(validation: Types.ValidationRule<T>[]) 
             if (rule instanceof RegExp)
                 return rule.toString();
 
-            if (typeof rule === 'object' && rule !== null && 'pattern' in rule)
+            if (typeof rule === 'object' && rule !== null && ('pattern' in rule || 'callback' in rule))
                 return `<${rule.description}>`;
 
             return JSON.stringify(rule);

@@ -23,8 +23,12 @@ export default class Validation {
                 typeof rule === 'object' && rule !== null &&
                 'pattern' in rule && rule.pattern instanceof RegExp &&
                 'description' in rule && typeof rule.description === 'string';
+            const isCallbackObject =
+                typeof rule === 'object' && rule !== null &&
+                'callback' in rule && rule.callback instanceof Function &&
+                'description' in rule && typeof rule.description === 'string';
 
-            if (!isDirectValue && !isRegExp && !isPatternObject)
+            if (!isDirectValue && !isRegExp && !isPatternObject && !isCallbackObject)
                 return rule;
         }
     }
@@ -39,6 +43,9 @@ export default class Validation {
 
             if (typeof rule === 'object' && rule !== null && 'pattern' in rule)
                 return rule.pattern.test(String(value));
+
+            if (typeof rule === 'object' && rule !== null && 'callback' in rule)
+                return rule.callback(value);
 
             return rule === value;
         });

@@ -295,6 +295,10 @@ export default class CommanderWrapper {
             throw new Error(`Option "${optionName}" not found in command "${this.usedCommand}".`);
     }
 
+    testValidations<T>(value: T, validations: Types.ValidationRule<T>[]) {
+        return this.validation.isValueValid(value, validations);
+    }
+
     //
 
     private getCommand(commandName: string) {
