@@ -291,10 +291,10 @@ export default class CommanderWrapper {
 
             if (Array.isArray(option.defaultValue)) {
                 for (const single of option.defaultValue)
-                    this.validateOptionAssigne(single, option, true);
+                    this.validateOptionValue(single, option, true);
             }
             else {
-                this.validateOptionAssigne(option.defaultValue, option, true);
+                this.validateOptionValue(option.defaultValue, option, true);
             }
 
             //
@@ -338,7 +338,7 @@ export default class CommanderWrapper {
 
                 const parsed: Types.Value = option.valueParser?.(raw) ?? raw;
 
-                this.validateOptionAssigne(parsed, option, false);
+                this.validateOptionValue(parsed, option, false);
 
                 return option.cmder_option.variadic ? [...previous, parsed] : parsed;
             };
@@ -416,19 +416,63 @@ export default class CommanderWrapper {
 
     //
 
-    isOptionValueValid(optionName: string, value: Types.Value) {
+    isOptionAssigneValid(optionName: string, value: Types.Value | Types.Value[]) {
         const command = this.getCommand(this.usedCommand);
-
-        for (const groupOptions of Object.values(command.groups)) {
-            for (const option of groupOptions) {
-                if (option.cmder_option.attributeName() === optionName)
-                    return this.validation.isValueValid(value, option.validation);
-            }
-        }
 
         //
 
-        throw new Error(`Option "${optionName}" not found in command "${this.usedCommand}".`);
+        const option = (() => {
+            for (const groupOptions of Object.values(command.groups)) {
+                for (const option of groupOptions) {
+                    if (option.cmder_option.attributeName() === optionName)
+                        return option;
+                }
+            }
+        })();
+
+        //
+
+        if (!option)
+            throw new Error(`Option "${optionName}" not found in command "${this.usedCommand}".`);
+
+        //
+
+        if (option.cmder_option.variadic) {
+            if (!Array.isArray(value))
+                throw new Error(`Option "${optionName}" is variadic and must be an array.`);
+
+            return value.every(v => this.validation.isValueValid(v, option.validation));
+        }
+        else {
+            if (Array.isArray(value))
+                throw new Error(`Option "${optionName}" is not variadic and cannot be an array.`);
+
+            return this.validation.isValueValid(value, option.validation);
+        }
+    }
+
+    isOptionValueValid(optionName: string, value: Types.Value) {
+        const command = this.getCommand(this.usedCommand);
+
+        //
+
+        const option = (() => {
+            for (const groupOptions of Object.values(command.groups)) {
+                for (const option of groupOptions) {
+                    if (option.cmder_option.attributeName() === optionName)
+                        return option;
+                }
+            }
+        })();
+
+        //
+
+        if (!option)
+            throw new Error(`Option "${optionName}" not found in command "${this.usedCommand}".`);
+
+        //
+
+        return this.validation.isValueValid(value, option.validation);
     }
 
     isValueValid(value: Types.Value, validations: Types.ValidationRule[]) {
@@ -453,7 +497,7 @@ export default class CommanderWrapper {
         return matches.map(match => match[1]);
     }
 
-    private validateOptionAssigne(value: Types.Value, option: Types.CommandOptionWrapper, isDefault: boolean) {
+    private validateOptionValue(value: Types.Value, option: Types.CommandOptionWrapper, isDefault: boolean) {
         const isValid = this.validation.isValueValid(value, option.validation);
 
         if (!isValid) {
