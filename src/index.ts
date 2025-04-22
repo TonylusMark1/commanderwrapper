@@ -150,9 +150,14 @@ export default class CommanderWrapper {
                     }
                 }
                 else {
-                    if (!this.validation.isValueValid(a.default, a.validation)) {
-                        const allowed = Utils.FormatValidationRules(a.validation);
-                        throw new Error(colorette.red(`Invalid default value ${a.default} for argument "${colorette.yellow(a.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
+                    if (!a.variadic) {
+                        if (!this.validation.isValueValid(a.default, a.validation)) {
+                            const allowed = Utils.FormatValidationRules(a.validation);
+                            throw new Error(colorette.red(`Invalid default value ${a.default} for argument "${colorette.yellow(a.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
+                        }
+                    }
+                    else {
+                        throw new Error(colorette.red(`Default value for argument "${colorette.yellow(a.name)}" has to be an array if the argument is variadic.`));
                     }
                 }
             }
@@ -276,8 +281,11 @@ export default class CommanderWrapper {
         //
 
         if (option.defaultValue !== undefined) {
-            if ( !option.cmder_option.variadic && Array.isArray(option.defaultValue) )
+            if (!option.cmder_option.variadic && Array.isArray(option.defaultValue))
                 throw new Error(`Default value for option "${option.cmder_option.attributeName()}" cannot be an array if the option is not variadic.`);
+
+            if (option.cmder_option.variadic && !Array.isArray(option.defaultValue))
+                throw new Error(`Default value for option "${option.cmder_option.attributeName()}" has to be an array if the option is variadic.`);
 
             //
 
