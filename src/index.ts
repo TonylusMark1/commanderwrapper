@@ -137,11 +137,16 @@ export default class CommanderWrapper {
         for (const a of o?.arguments) { //sprawdzanie defaultów
             if (a.default && a.validation) {
                 if (Array.isArray(a.default)) {
-                    for (const d of a.default) {
-                        if (!this.validation.isValueValid(d, a.validation)) {
-                            const allowed = Utils.FormatValidationRules(a.validation);
-                            throw new Error(colorette.red(`Invalid default value ${d} for argument "${colorette.yellow(a.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
+                    if (a.variadic) {
+                        for (const d of a.default) {
+                            if (!this.validation.isValueValid(d, a.validation)) {
+                                const allowed = Utils.FormatValidationRules(a.validation);
+                                throw new Error(colorette.red(`Invalid default value ${d} for argument "${colorette.yellow(a.name)}".\n${colorette.green('Allowed')}: ${allowed}`));
+                            }
                         }
+                    }
+                    else {
+                        throw new Error(colorette.red(`Default value for argument "${colorette.yellow(a.name)}" cannot be an array if the argument is not variadic.`));
                     }
                 }
                 else {
@@ -226,9 +231,6 @@ export default class CommanderWrapper {
 
         const cmder_option = new Option(config.flags, config.description);
 
-        if (config.defaultValue !== undefined)
-            cmder_option.default(config.defaultValue);
-
         //
 
         if (config.validation) {
@@ -274,6 +276,11 @@ export default class CommanderWrapper {
         //
 
         if (option.defaultValue !== undefined) {
+            if ( !option.cmder_option.variadic && Array.isArray(option.defaultValue) )
+                throw new Error(`Default value for option "${option.cmder_option.attributeName()}" cannot be an array if the option is not variadic.`);
+
+            //
+
             if (Array.isArray(option.defaultValue)) {
                 for (const single of option.defaultValue)
                     this.validateOptionAssigne(single, option, true);
@@ -281,6 +288,10 @@ export default class CommanderWrapper {
             else {
                 this.validateOptionAssigne(option.defaultValue, option, true);
             }
+
+            //
+
+            option.cmder_option.default(option.defaultValue);
         }
 
         //
@@ -338,7 +349,7 @@ export default class CommanderWrapper {
         return this.usedCommand;
     }
 
-    getOptions<OBJ extends Record<string, any> = Record<string, any>>(options?: { onlyUserProvided?: boolean; groupName?: string}) {
+    getOptions<OBJ extends Record<string, any> = Record<string, any>>(options?: { onlyUserProvided?: boolean; groupName?: string }) {
         const commandName = this.usedCommand;
 
         if (!commandName)
