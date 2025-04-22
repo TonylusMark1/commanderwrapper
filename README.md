@@ -1,7 +1,6 @@
-
 # CommanderWrapper
 
-Simple wrapper for Commander.js — with grouped/tagged options, rich help and validation.
+Simple wrapper for Commander.js — with grouping options, rich help and validation.
 
 ---
 
@@ -14,12 +13,12 @@ npm install commanderwrapper
 ## 🚀 Features
 
 - 📋 Typed options & arguments
-- 🎨 Custom groups and tags
+- 🎨 Custom groups
 - ✅ Validation with values, RegExp, or custom pattern objects
 - 🧩 Scoped option registration
 - 🖍️ Rich help text generation with grouping and hints
-- 🧩 `getOptions()` — per group/tags/only user-provided
-- 🎯 `getCommandArguments()` — retrieve parsed arguments
+- 🧩 `getOptions()` — per group/only user-provided
+- 🎯 `getCommandArguments()` — retrieve parsed positional arguments
 - 🧪 `isOptionValueValid()` — check if value fits validation
 
 ## 🛠️ Usage
@@ -29,21 +28,25 @@ import CommanderWrapper from 'commanderwrapper';
 
 const cli = new CommanderWrapper();
 
-cli.registerCommand('serve', 'Start the server', {
+cli.registerCommand({
+  name: 'serve',
+  description: 'Start the server',
   strictMode: true,
   arguments: [
     { name: 'port', required: true, parser: Number, validation: [3000, 8080] }
   ]
 }, (registerOption) => {
-  registerOption({ groupName: 'General' }, {
+  registerOption({
+    groupName: 'General',
     flags: '-h, --host <host>',
     description: 'Hostname',
-    defaultValue: 'localhost',
+    defaultValue: 'localhost'
   });
 
-  registerOption({ groupName: 'General', tags: ['network'] }, {
+  registerOption({
+    groupName: 'General',
     flags: '--secure',
-    description: 'Enable HTTPS',
+    description: 'Enable HTTPS'
   });
 });
 
@@ -57,76 +60,39 @@ console.log({ args, options });
 
 ## 🎨 Help Text Example
 
-Automatically generates global and command-specific help:
-
 ```
 Available Commands:
-
   serve
     Start the server
 
-Tip: For detailed options, use <command> --help
-```
-
-For command-specific help:
-```
-Arguments:
-
-  port (required)
-
-Options for command: serve
-
-General:
-
-  -h, --host <host>     Hostname (Default: "localhost")
-  --secure              Enable HTTPS
+(for detailed options, use <command> --help)
 ```
 
 ## 🔍 API Reference
 
-### `registerCommand(commandName, description, options?, setup?)`
+### `registerCommand(config, setup?)`
 
-Define a command with description and options.
+Define a command with description, args, and scoped options.
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `commandName` | `string` | Name of the command |
-| `description` | `string` | Description of the command |
-| `options` | `RegisterCommandOptions` | Additional command options |
-| `setup` | `(registerOption) => void` | Callback to register options scoped to this command |
+### `registerOption(config)`
 
-### `registerOption(meta, config)`
-
-Register an option for the active command.
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `meta` | `RegisterOptionMeta` | Grouping & tags |
-| `config` | `OptionConfig<T>` | Option configuration |
+Register an option scoped to the current command.
 
 ### `parse(argv?)`
 
 Parse process arguments.
 
-### `getOptions()`
+### `getOptions(opts?)`
 
-Retrieve parsed options.
+Retrieve parsed options with optional filtering.
 
 ### `getCommandArguments()`
 
 Retrieve parsed arguments.
 
-### `isOptionValueValid(optionName, value)`
+### `isOptionValueValid(name, value)`
 
-Validate an option value.
-
-## 🔧 Types
-
-You have full types support:
-- `OptionConfig<T>`
-- `RegisterOptionMeta`
-- `ValidationRule<T>`
-- `CommandArgument`
+Check if value passes option's validation.
 
 ## 📄 License
 
