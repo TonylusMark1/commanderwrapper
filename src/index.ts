@@ -439,7 +439,7 @@ export default class CommanderWrapper {
 
         if (option.cmder_option.variadic) {
             if (!Array.isArray(value))
-                throw new Error(`Option "${optionName}" is variadic and must be an array.`);
+                throw new Error(`Option "${optionName}" is variadic and must be an array instead of: ${JSON.stringify(value)}.`);
 
             return value.every(v => this.validation.isValueValid(v, option.validation));
         }
