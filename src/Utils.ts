@@ -2,7 +2,7 @@ import * as Types from "./types.js";
 
 //
 
-export function FormatValidationRules<T>(validation: Types.ValidationRule<T>[]) {
+export function FormatValidationRules(validation: Types.ValidationRule[]) {
     return validation
         .map(rule => {
             if (rule instanceof RegExp)
@@ -19,12 +19,12 @@ export function FormatValidationRules<T>(validation: Types.ValidationRule<T>[]) 
 
 //
 
-export function FormatCommandArgumentsInLine(commandMeta: Types.RegisteredCommand) {
-    return commandMeta.arguments
-        .map(arg => FormatCommandArgument(arg))
+export function FormatCommandArgumentsInLine(cmd: Types.CommandWrapper) {
+    return cmd.arguments
+        ?.map(arg => FormatCommandArgument(arg))
         .join(" ");
 }
 
-export function FormatCommandArgument(arg: Types.CommandMetaArgument) {
-    return (arg.config.required ? `<${arg.config.name}>` : `[${arg.config.name}]`);
+export function FormatCommandArgument(cfg: Types.CommandPositionalArgumentConfig) {
+    return (cfg.required ? `<${cfg.name}>` : `[${cfg.name}]`);
 }

@@ -1,66 +1,72 @@
-import { Command, Option } from 'commander';
+import { Command as CmderCommand, Option as CmderOption } from 'commander';
 
 //
 
-export type ValidationRule<T> =
-    | (T extends any[] ? never : T)
-    | RegExp
-    | { pattern: RegExp; description: string }
-    | { callback: (value: T) => boolean; description: string };
+export type Value = string | number | boolean | bigint;
 
-//
-
-export interface OptionConfig<T> {
-    flags: string;
-    description: string;
-    defaultValue?: T;
-    validation?: ValidationRule<T>[];
-
-    onValidate?: (value: T) => void;
-    valueParser?: (value: string) => any;
-}
-
-export interface RegisterOption {
-    groupName?: string;
-    tags?: string[];
-}
-
-export interface RegisteredOption<T> extends OptionConfig<T>, Required<RegisterOption> {
-    commanderOption: Option;
-}
+export type ValidationRule = (
+    Value |
+    RegExp |
+    { pattern: RegExp; description: string } |
+    { callback: (value: Value) => boolean; description: string }
+);
 
 //
 
 export interface RegisterCommand {
+    name: string;
+    description?: string;
+
     strictMode?: boolean;
     isDefault?: boolean;
-    arguments?: CommandPositionalArgument[];
+    arguments?: CommandPositionalArgumentConfig[];
 }
 
-export interface CommandPositionalArgument<T extends any = any> {
+export interface CommandPositionalArgumentConfig {
     name: string;
     required?: boolean;
-    default?: T;
-    parser?: (value: string) => T;
-    validation?: ValidationRule<any>[];
+    variadic?: boolean;
+    default?: Value | Value[];
+
+    parser?: (value: string) => Value;
+
+    validation?: ValidationRule[];
 }
 
-export interface CommandGroup {
-    [groupName: string]: RegisteredOption<any>[];
-}
+export interface CommandWrapper {
+    cmder_command: CmderCommand;
 
-export interface RegisteredCommand {
-    commander: Command;
-    groups: CommandGroup;
+    groups: {
+        [groupName: string]: CommandOptionWrapper[]
+    };
+
     userProvidedOptions: Set<string>;
-    arguments: CommandMetaArgument[];
+
+    arguments?: CommandPositionalArgumentWrapper[];
 }
 
-export interface CommandMetaArgument<T extends any = any> {
-    config: CommandPositionalArgument<T>;
-    value: T;
+export interface CommandPositionalArgumentWrapper extends CommandPositionalArgumentConfig {
+    value?: Value | Value[];
 }
 
 //
 
-export type ScopedRegisterOptionCallback = <T>(regOpt: RegisterOption, config: OptionConfig<T>) => void;
+export interface CommandOptionConfig {
+    groupName?: string;
+
+    flags: string;
+    description: string;
+    defaultValue?: Value | Value[];
+
+    valueParser?: (value: string) => Value;
+
+    validation?: ValidationRule[];
+}
+
+export interface CommandOptionWrapper extends CommandOptionConfig {
+    cmder_option: CmderOption;
+}
+
+//
+
+export type ScopedRegisterOptionCallback = (cfg: CommandOptionConfig) => void;

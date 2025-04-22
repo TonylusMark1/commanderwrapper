@@ -5,9 +5,9 @@ const cli = new CommanderWrapper();
 
 // Register a command called "greet"
 cli.registerCommand(
-	'greet',
-	'Greet a user with a custom message',
 	{
+		name: 'greet',
+		description: 'Greet a user with a custom message',
 		strictMode: true,
 		arguments: [
 			{
@@ -21,7 +21,8 @@ cli.registerCommand(
 	},
 	(registerOption) => {
 		// Register options for the "greet" command
-		registerOption({ groupName: 'Greeting' }, {
+		registerOption({
+			groupName: 'Greeting',
 			flags: '-t, --times <number>',
 			description: 'Number of times to repeat the greeting',
 			defaultValue: 1,
@@ -29,7 +30,8 @@ cli.registerCommand(
 			validation: [1, 2, 3, 4, 5]
 		});
 
-		registerOption({ groupName: 'Greeting' }, {
+		registerOption({
+			groupName: 'Greeting',
 			flags: '-u, --uppercase',
 			description: 'Print the greeting in uppercase letters'
 		});
@@ -42,8 +44,6 @@ cli.parse();
 // Retrieve the parsed arguments and options
 const args = cli.getCommandArguments<{ name: string }>();
 const options = cli.getOptions<{ times: number; uppercase: boolean }>();
-
-console.log(args, options);
 
 // Generate the greeting message
 let message = `Hello, ${args.name}!`;

@@ -15,7 +15,7 @@ export default class Validation {
 
     //
 
-    findFirstInvalidRule<T>(validation: Types.ValidationRule<T>[]) {
+    findFirstInvalidRule(validation: Types.ValidationRule[]) {
         for (const rule of validation) {
             const isDirectValue = typeof rule === 'string' || typeof rule === 'number' || typeof rule === 'boolean';
             const isRegExp = rule instanceof RegExp;
@@ -33,7 +33,7 @@ export default class Validation {
         }
     }
 
-    isValueValid<T>(value: T, validation?: Types.ValidationRule<T>[]): boolean {
+    isValueValid(value: Types.Value, validation?: Types.ValidationRule[]): boolean {
         if (!validation || validation.length === 0)
             return true;
 
@@ -41,11 +41,17 @@ export default class Validation {
             if (rule instanceof RegExp)
                 return rule.test(String(value));
 
+            //
+
             if (typeof rule === 'object' && rule !== null && 'pattern' in rule)
                 return rule.pattern.test(String(value));
 
+            //
+
             if (typeof rule === 'object' && rule !== null && 'callback' in rule)
                 return rule.callback(value);
+
+            //
 
             return rule === value;
         });

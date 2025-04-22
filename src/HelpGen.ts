@@ -38,7 +38,7 @@ export default class HelpGen {
         //
 
         for (const [commandName, commandMeta] of this.parent.commands.entries()) {
-            const description = commandMeta.commander.description() || '';
+            const description = commandMeta.cmder_command.description() || '';
 
             lines.push(`  ${colorette.cyan(commandName)}`);
 
@@ -71,8 +71,8 @@ export default class HelpGen {
 
     //
 
-    generateCommandFullIntroduction(commandName: string) {
-        const commandMeta = this.parent.getCommand(commandName);
+    generateCommandFullIntroduction(name: string) {
+        const cmd = this.parent.getCommand(name);
 
         //
 
@@ -80,25 +80,25 @@ export default class HelpGen {
 
         //
 
-        lines.push(colorette.bold(`Command:`) + ` ${commandName}` + " " + Utils.FormatCommandArgumentsInLine(commandMeta));
+        lines.push(colorette.bold(`Command:`) + ` ${name}` + " " + Utils.FormatCommandArgumentsInLine(cmd));
         lines.push("");
-        lines.push(colorette.italic(`  ${commandMeta.commander.description()}`));
+        lines.push(colorette.italic(`  ${cmd.cmder_command.description()}`));
         
         //
 
-        if (commandMeta.arguments.length) {
+        if (cmd.arguments?.length) {
             lines.push("");
 
-            const args: { left: string, right?: string }[] = commandMeta.arguments.map(arg => {
+            const args: { left: string, right?: string }[] = cmd.arguments.map(arg => {
                 return {
                     left: Utils.FormatCommandArgument(arg),
                     right: [
-                        `(${arg.config.required ? "Required": "Not required"})`,
-                        `(${arg.config.validation ? `Allowed values: ${colorette.yellow(Utils.FormatValidationRules(arg.config.validation))}` : undefined})`,
+                        `(${arg.required ? "Required": "Not required"})`,
+                        `(${arg.validation ? `Allowed values: ${colorette.yellow(Utils.FormatValidationRules(arg.validation))}` : undefined})`,
                         (
-                            arg.config.default
+                            arg.default
                                 ?
-                                `(Default value: ${colorette.yellow(JSON.stringify(arg.config.default))})`
+                                `(Default value: ${colorette.yellow(JSON.stringify(arg.default))})`
                                 :
                                 ""
                         ),
@@ -119,8 +119,8 @@ export default class HelpGen {
         return lines.join("\n");
     }
 
-    generateCommandOptionsFullIntroduction(commandName: string) {
-        const commandMeta = this.parent.getCommand(commandName);
+    generateCommandOptionsFullIntroduction(name: string) {
+        const cmd = this.parent.getCommand(name);
 
         //
 
@@ -132,14 +132,13 @@ export default class HelpGen {
 
         //
 
-        const groups = Object.entries(commandMeta.groups);
+        const groups = Object.entries(cmd.groups);
 
         groups.unshift(["built-in", [{
             groupName: "built-in",
             flags: "-h, --help",
             description: "Show help",
-            tags: [],
-            commanderOption: null as any
+            cmder_option: null as any
         }]]);
 
         //
